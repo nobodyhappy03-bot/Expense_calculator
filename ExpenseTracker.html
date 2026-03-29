@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Personal Finance Dashboard</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="ExpenseTracker.css">
+    <style>
+      .period-filter-bar {
+        display: flex;
+        gap: 0.5rem;
+        align-items: center;
+        background: #f3f4f6;
+        border-radius: 10px;
+        padding: 4px;
+      }
+      .period-filter-bar button {
+        border: none;
+        border-radius: 7px;
+        padding: 0.4rem 1rem;
+        font-size: 0.85rem;
+        cursor: pointer;
+        background: transparent;
+        color: #374151;
+        font-weight: 500;
+        transition: all 0.15s ease;
+      }
+      .period-filter-bar button:hover {
+        background: #e5e7eb;
+      }
+      #btn-all {
+        background: #3b82f6 !important;
+        color: white !important;
+        font-weight: 600 !important;
+      }
+    </style>
+</head>
+<body>
+        <!-- Filter Modal -->
+        <div id="filterModal" class="modal">
+            <div class="modal-content" style="max-width:350px;">
+                <div class="modal-header">
+                    <h2 class="modal-title">Filter Transactions</h2>
+                    <button class="close-btn" onclick="closeModal('filterModal')">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <form id="filterForm">
+                        <div class="form-group">
+                            <label class="form-label">Type</label>
+                            <div style="display:flex;gap:1rem;">
+                                <label><input type="radio" name="filterType" value="all" checked> All</label>
+                                <label><input type="radio" name="filterType" value="expense"> Expense</label>
+                                <label><input type="radio" name="filterType" value="income"> Income</label>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" onclick="closeModal('filterModal')">Cancel</button>
+                    <button class="btn btn-primary" onclick="applyFilter()">Apply</button>
+                </div>
+            </div>
+        </div>
+
+    <div class="header">
+        <h1 id="greeting-text">Good Morning!</h1>
+        <div class="header-controls">
+
+            <!-- ── Period filter buttons ── -->
+            <div class="period-filter-bar">
+                <button id="btn-all"     onclick="setPeriod('all')">All</button>
+                <button id="btn-weekly"  onclick="setPeriod('weekly')">Weekly</button>
+                <button id="btn-monthly" onclick="setPeriod('monthly')">Monthly</button>
+            </div>
+
+            <div class="date-picker">
+                <i class="fas fa-calendar"></i>
+                <span id="header-date"></span>
+            </div>
+            <button class="export-btn">
+                <i class="fas fa-download"></i>
+                Export
+            </button>
+            <button class="reset-btn" onclick="resetAllTransactions()" style="background:#ef4444;color:white;border:none;border-radius:8px;padding:0.5rem 1rem;cursor:pointer;">
+                <i class="fas fa-trash"></i> Reset
+            </button>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="dashboard-grid">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Monthly Income <span style="font-size:0.7rem;font-weight:400;color:#9ca3af;">(current month)</span></h3>
+                    <button class="card-menu"><i class="fas fa-ellipsis-h"></i></button>
+                </div>
+                <div class="amount income-amount">₹00.00</div>
+                <div class="change">
+                    <i class="fas fa-arrow-up"></i>
+                    12% vs Last month
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Monthly Expenses <span style="font-size:0.7rem;font-weight:400;color:#9ca3af;">(current month)</span></h3>
+                    <button class="card-menu"><i class="fas fa-ellipsis-h"></i></button>
+                </div>
+                <div class="amount expense-amount">₹00.00</div>
+                <div class="change">
+                    <i class="fas fa-arrow-up"></i>
+                    12% vs Last month
+                </div>
+            </div>
+
+            <div class="card my-card">
+                <div class="card-header">
+                    <h3 class="card-title" id="bankNameTitle">My Bank</h3>
+                    <button class="card-menu" style="color: rgba(255,255,255,0.8)" onclick="openBankEditModal()"><i class="fas fa-ellipsis-h"></i></button>
+                </div>
+                <div style="font-size: 0.75rem; opacity: 0.8; margin-bottom: 1rem;">Linked to your primary wallet</div>
+                <div class="card-chip"></div>
+                <div class="card-number">5435 2735 0037 0015</div>
+                <div class="card-holder" id="bankNameHolder">My Bank</div>
+                <div class="card-logo">
+                    <div class="card-logo-circle logo-red"></div>
+                    <div class="card-logo-circle logo-orange"></div>
+                </div>
+                <div class="spending-section">
+                    <div style="margin-bottom: 0.5rem; font-size: 0.875rem; opacity: 0.9;">Bank Savings</div>
+                    <div class="spending-limit" id="bankLimit">₹10,000</div>
+                    <div class="spending-used">of ₹10,000 savings left</div>
+                    <div class="progress-bar">
+                        <div class="progress-fill"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="chart-section">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Overview</h3>
+                    <div style="display: flex; gap: 1rem;">
+                        <div class="dropdown">Yearly <i class="fas fa-chevron-down"></i></div>
+                        <button class="filter-btn">
+                            <i class="fas fa-filter"></i>
+                            Filter
+                        </button>
+                    </div>
+                </div>
+                <div class="chart-container"></div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">All Expenses</h3>
+                    <button class="card-menu"><i class="fas fa-ellipsis-h"></i></button>
+                </div>
+                <div style="font-size: 0.75rem; color: #6b7280; margin-bottom: 1rem;">Spending breakdown by category</div>
+                
+                <div class="expenses-breakdown">
+                    <div class="total-expenses">₹0</div>
+                    
+                    <div class="period-tabs">
+                        <span class="period-tab">Weekly</span>
+                        <span class="period-tab active">Monthly</span>
+                    </div>
+                    
+                    <div class="period-amounts">
+                        <span>Weekly</span>
+                        <span>Monthly</span>
+                        <span>Yearly</span>
+                    </div>
+                    
+                    <div class="period-values">
+                        <span>₹0</span>
+                        <span>₹0</span>
+                        <span>₹0</span>
+                    </div>
+                    
+                    <div class="color-bar"></div>
+                    
+                    <ul class="expense-categories">
+                        <li class="expense-category">
+                            <span style="opacity:0.7;">No expenses</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="card transactions-section">
+            <div class="card-header">
+                <h3 class="card-title">Recent Transactions</h3>
+                <div class="filters">
+                    <button class="filter-btn">
+                        <i class="fas fa-sort"></i>
+                        Short
+                    </button>
+                    <button class="filter-btn">
+                        <i class="fas fa-filter"></i>
+                        Filter
+                    </button>
+                </div>
+            </div>
+            
+            <table class="transactions-table">
+                <thead>
+                    <tr>
+                        <th>Date <i class="fas fa-sort"></i></th>
+                        <th>Category <i class="fas fa-sort"></i></th>
+                        <th>Amount <i class="fas fa-sort"></i></th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Add Income/Expense Buttons -->
+    <div class="add-buttons">
+        <button class="fab fab-income" onclick="openIncomeModal()" title="Add Income (Ctrl+I)">
+            <i class="fas fa-plus"></i>
+        </button>
+        <button class="fab fab-expense" onclick="openExpenseModal()" title="Add Expense (Ctrl+E)">
+            <i class="fas fa-minus"></i>
+        </button>
+    </div>
+
+    <!-- Income Modal -->
+    <div id="incomeModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Add Income</h2>
+                <button class="close-btn" onclick="closeModal('incomeModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="incomeForm">
+                    <div class="form-group">
+                        <label class="form-label">Amount</label>
+                        <input type="number" class="form-input" id="incomeAmount" placeholder="Enter amount" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Category</label>
+                        <select class="form-select" id="incomeCategory" required>
+                            <option value="">Select category</option>
+                            <option value="salary">Salary</option>
+                            <option value="freelance">Freelance</option>
+                            <option value="business">Business</option>
+                            <option value="investment">Investment</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Description</label>
+                        <input type="text" class="form-input" id="incomeDescription" placeholder="Enter description">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Date</label>
+                        <input type="date" class="form-input" id="incomeDate" required>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('incomeModal')">Cancel</button>
+                <button class="btn btn-primary" onclick="addIncome()">Add Income</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Expense Modal -->
+    <div id="expenseModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Add Expense</h2>
+                <button class="close-btn" onclick="closeModal('expenseModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="expenseForm">
+                    <div class="form-group">
+                        <label class="form-label">Amount</label>
+                        <input type="number" class="form-input" id="expenseAmount" placeholder="Enter amount" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Category</label>
+                        <select class="form-select" id="expenseCategory" required>
+                            <option value="">Select category</option>
+                            <option value="food">Food & Health</option>
+                            <option value="entertainment">Entertainment</option>
+                            <option value="shopping">Shopping</option>
+                            <option value="investment">Investment</option>
+                            <option value="transport">Transport</option>
+                            <option value="utilities">Utilities</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Description</label>
+                        <input type="text" class="form-input" id="expenseDescription" placeholder="Enter description">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Date</label>
+                        <input type="date" class="form-input" id="expenseDate" required>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('expenseModal')">Cancel</button>
+                <button class="btn btn-primary" onclick="addExpense()">Add Expense</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Bank Modal -->
+    <div id="bankEditModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Edit Bank Details</h2>
+                <button class="close-btn" onclick="closeModal('bankEditModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="bankEditForm">
+                    <div class="form-group">
+                        <label class="form-label">Bank Name</label>
+                        <input type="text" class="form-input" id="editBankName" placeholder="Enter bank name" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Bank Limit</label>
+                        <input type="number" class="form-input" id="editBankLimit" placeholder="Enter limit" required>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('bankEditModal')">Cancel</button>
+                <button class="btn btn-primary" onclick="saveBankEdit()">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Load dummy data first, then main script -->
+    <script src="dummyData.js"></script>
+    <script src="ExpenseTracker.js"></script>
+</body>
+</html>
