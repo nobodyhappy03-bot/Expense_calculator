@@ -595,7 +595,50 @@ body {
 .fab-expense {
   background: #ef4444;
 }
-
+ .period-filter-bar {
+        display: flex;
+        gap: 0.5rem;
+        align-items: center;
+        background: #f3f4f6;
+        border-radius: 10px;
+        padding: 4px;
+      }
+      .period-filter-bar button {
+        border: none;
+        border-radius: 7px;
+        padding: 0.4rem 1rem;
+        font-size: 0.85rem;
+        cursor: pointer;
+        background: transparent;
+        color: #374151;
+        font-weight: 500;
+        transition: all 0.15s ease;
+      }
+      .period-filter-bar button:hover {
+        background: #e5e7eb;
+      }
+      #btn-all {
+        background: #3b82f6 !important;
+        color: white !important;
+        font-weight: 600 !important;
+      } 
+            /* Custom scrollbar for better aesthetics */
+        /* ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+*/
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -633,5 +676,42 @@ body {
 
   .main-content {
     padding: 1rem;
+  }
+}
+@media (max-width: 500px) {
+.period-filter-bar{
+  display: none;  
+}
+}
+/* 🚫 Prevent horizontal overflow */
+body {
+  overflow-x: hidden;
+}
+
+/* 📱 Fix table overflow */
+.transactions-section {
+  overflow-x: auto;
+}
+
+/* Make table responsive */
+.transactions-table {
+  min-width: 600px; /* keeps structure */
+}
+
+/* Better mobile spacing */
+@media (max-width: 768px) {
+
+  .transactions-section {
+    padding-bottom: 10px;
+  }
+
+  .transactions-table {
+    font-size: 0.8rem;
+  }
+
+  .transactions-table th,
+  .transactions-table td {
+    padding: 0.5rem;
+    white-space: nowrap; /* prevents breaking */
   }
 }
